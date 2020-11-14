@@ -16,7 +16,7 @@ class Indexer():
         self.tokenizer = tokenizer
         self.idMap = {}
         self.invertedIndex = {}
-        self.docID = 1
+        self.docID = 0
         self.idMapFile = "idMapFile.pickle"
 
         with open(self.idMapFile, 'wb') as f:   #Init or clean file
@@ -35,6 +35,16 @@ class Indexer():
             pickle.dump(content, f)
         
         self.idMap = {}
+    
+    def addTokensToIndex(self, tokens):
+        for word in tokens:  #Iterate over token of documents
+
+            if word not in self.invertedIndex:
+                self.invertedIndex[word] = [1, [self.docID]]
+            else:
+                if self.docID != self.invertedIndex[word][1][-1]:  #check if word did not happen previously in same doc.
+                    self.invertedIndex[word][1].append(self.docID)
+                    self.invertedIndex[word][0] += 1
 
     def index(self):
 
@@ -52,14 +62,7 @@ class Indexer():
 
                 tokens = self.tokenizer.process(title, abstract)
 
-                for word in tokens:  #Iterate over token of documents
-
-                    if word not in self.invertedIndex:
-                        self.invertedIndex[word] = [1, [self.docID]]
-                    else:
-                        if self.docID != self.invertedIndex[word][1][-1]:  #check if word did not happen previously in same doc.
-                            self.invertedIndex[word][1].append(self.docID)
-                            self.invertedIndex[word][0] += 1
+                self.addTokensToIndex(tokens)
                 
                 self.docID+=1
             
