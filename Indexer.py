@@ -1,6 +1,7 @@
 from Corpus import CorpusReader
 from Tokenizer1 import Tokenizer1
 from Tokenizer2 import Tokenizer2
+from Posting import Posting
 import time
 import heapq
 import argparse
@@ -94,6 +95,34 @@ class Indexer():
             f.write(string)
 
         print("File {} created".format(file))
+        f.close()
+
+    def read_file(self, file="Index.txt"):
+        print("Reading {}".format(file))
+        try:
+            f = open(file)
+        except FileNotFoundError:
+            print('File {} was not found'.format(file))
+            return
+        self.invertedIndex = {}
+
+        while True:
+            line = f.readline()  # ler linha a linha
+            if not line:
+                break
+
+            # formato de cada linha:
+            # termo:idf ; doc_id:term_weight ; doc_id:term_weight ; ...
+            line = line.split(";")
+            term = line[0].split(":")[0]
+            idf = float(line[0].split(":")[1])
+            postingList = [Posting(int(values.split(":")[0]), float(values.split(":")[1])) for values in line[1:]]
+
+            self.invertedIndex[term] = [idf, postingList]
+
+        f.close()
+        print("Index created from file {}".format(file))
+
 
 if __name__ == "__main__":
 

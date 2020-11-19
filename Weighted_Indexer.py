@@ -103,4 +103,4 @@ if __name__ == "__main__":
     query = input("Query: ")
     print(indexer.cos_Score(query))
 
-    indexer.write_to_file()
+    indexer.read_file()
