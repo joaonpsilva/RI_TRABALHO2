@@ -23,12 +23,12 @@ class Weighted_Indexer(Indexer):
         for term, valList in self.invertedIndex.items():
             valList[0] = log10(self.docID/valList[0])
 
+
     def index(self):
         super().index()
         self.build_idf()
 
     def addTokensToIndex(self, tokens):
-
         tokens = collections.Counter(tokens).most_common() #[(token, occur)]
         
         token_weights = { term : 1 + log10(occur) for term, occur in tokens}
@@ -44,7 +44,7 @@ class Weighted_Indexer(Indexer):
                 self.invertedIndex[token] = [1, [posting]]
             else:
                 self.invertedIndex[token][1].append(posting)
-    
+                self.invertedIndex[token][0] += 1    
 
     def cos_Score(self, query):
         queryTokens = collections.Counter(self.tokenizer.process(query)).most_common() #[(token, occur)]
