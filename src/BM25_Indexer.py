@@ -15,8 +15,8 @@ process = psutil.Process(os.getpid())
 
 class BM25_Indexer(Indexer):
 
-    def __init__(self, corpusreader, tokenizer, k1=1.2, b=0.75):
-        super().__init__(corpusreader, tokenizer)
+    def __init__(self,tokenizer, k1=1.2, b=0.75):
+        super().__init__(tokenizer)
         self.k1 = k1
         self.b = b
         self.docLength = {}
@@ -27,8 +27,8 @@ class BM25_Indexer(Indexer):
             valList[0] = log10(self.docID/valList[0])
 
 
-    def index(self):
-        super().index()
+    def index(self, corpusreader):
+        super().index(corpusreader)
         self.build_idf()
 
     def addTokensToIndex(self, tokens):
@@ -53,6 +53,9 @@ class BM25_Indexer(Indexer):
         doc_scores = {}
         for term in queryTokens:
 
+            if term not in self.invertedIndex:
+                continue
+
             idf = self.invertedIndex[term][0]
             for doc in self.invertedIndex[term][1]:
 
@@ -66,12 +69,30 @@ class BM25_Indexer(Indexer):
 
         bestDocs = heapq.nlargest(10, doc_scores.items(), key=lambda item: item[1])
         return bestDocs
+    
+    def read_file(self, file="../Index.txt"):
+        self.docLength={}
+        super().read_file(file)
+        self.avdl = sum(self.docLength.values())
+
+    def buildPostingList(self, line):
+        postingList = []
+        for values in line[1:]:
+            docid = int(values.split(":")[0])
+            tf = int(values.split(":")[0])
+            postingList.append(Posting(docid, tf))
+
+            if docid in self.docLength:
+                self.docLength[docid] += tf
+            else:
+                self.docLength[docid] = tf
+        
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-tokenizer", type=int, choices=[1,2], required=True, help="tokenizer")
+    parser.add_argument("-tokenizer", type=int, default=2, choices=[1, 2], help="tokenizer")
     parser.add_argument("-f", type=str, default="../all_sources_metadata_2020-03-13.csv", help="text")
     args = parser.parse_args()
 
@@ -82,11 +103,11 @@ if __name__ == "__main__":
         tokenizer = Tokenizer2()
 
     #CREATE INDEXER
-    indexer = BM25_Indexer(corpusreader, tokenizer)
+    indexer = BM25_Indexer(tokenizer)
     
     #GET RESULTS
     t1 = time.time()
-    indexer.index()
+    indexer.index(corpusreader)
     t2 = time.time()
 
     print('seconds: ', t2-t1)
@@ -94,6 +115,8 @@ if __name__ == "__main__":
     
     keyList = list(indexer.invertedIndex.keys())
     print('Vocabulary size: ', len(keyList))
+
+    indexer.write_to_file()
 
     #QUERY
 

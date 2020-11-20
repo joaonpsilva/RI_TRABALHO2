@@ -16,16 +16,15 @@ process = psutil.Process(os.getpid())
 
 class Tf_idf_Indexer(Indexer):
 
-    def __init__(self, corpusreader, tokenizer, method=None):
-        super().__init__(corpusreader, tokenizer)
-        self.method = method
+    def __init__(self, tokenizer):
+        super().__init__(tokenizer)
 
     def build_idf(self):
         for term, valList in self.invertedIndex.items():
             valList[0] = log10(self.docID / valList[0])
 
-    def index(self):
-        super().index()
+    def index(self,corpusreader):
+        super().index(corpusreader)
         self.build_idf()
 
     def addTokensToIndex(self, tokens):
@@ -75,7 +74,7 @@ class Tf_idf_Indexer(Indexer):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-tokenizer", type=int, choices=[1, 2], required=True, help="tokenizer")
+    parser.add_argument("-tokenizer", type=int, default=2, choices=[1, 2], help="tokenizer")
     parser.add_argument("-f", type=str, default="../all_sources_metadata_2020-03-13.csv", help="text")
     args = parser.parse_args()
 
@@ -86,11 +85,11 @@ if __name__ == "__main__":
         tokenizer = Tokenizer2()
 
     # CREATE INDEXER
-    indexer = Tf_idf_Indexer(corpusreader, tokenizer)
+    indexer = Tf_idf_Indexer(tokenizer)
 
     # GET RESULTS
     t1 = time.time()
-    indexer.index()
+    indexer.index(corpusreader)
     t2 = time.time()
 
     print('seconds: ', t2 - t1)
@@ -102,5 +101,3 @@ if __name__ == "__main__":
     # QUERY
     query = input("Query: ")
     print(indexer.score(query))
-
-    indexer.read_file()

@@ -13,8 +13,7 @@ process = psutil.Process(os.getpid())
 
 
 class Indexer():
-    def __init__(self, corpus, tokenizer):
-        self.corpusreader = corpus
+    def __init__(self, tokenizer):
         self.tokenizer = tokenizer
         self.idMap = {}
         self.invertedIndex = {}
@@ -49,12 +48,12 @@ class Indexer():
                     self.invertedIndex[word][1].append(self.docID)
                     self.invertedIndex[word][0] += 1
 
-    def index(self):
+    def index(self, CorpusReader):
 
         count = 0
         while self.hasEnoughMemory():
 
-            data = self.corpusreader.getNextChunk()
+            data = CorpusReader.getNextChunk()
             if data is None:
                 print("Finished")
                 break
@@ -116,12 +115,17 @@ class Indexer():
             line = line.split(";")
             term = line[0].split(":")[0]
             idf = float(line[0].split(":")[1])
-            postingList = [Posting(int(values.split(":")[0]), float(values.split(":")[1])) for values in line[1:]]
+            
+            postingList = self.buildPostingList(line)
 
             self.invertedIndex[term] = [idf, postingList]
 
         f.close()
         print("Index created from file {}".format(file))
+    
+    def buildPostingList(self, line):
+            return [Posting(int(values.split(":")[0]), float(values.split(":")[1])) for values in line[1:]]
+
 
 
 if __name__ == "__main__":
@@ -138,11 +142,11 @@ if __name__ == "__main__":
         tokenizer = Tokenizer2()
 
     # CREATE INDEXER
-    indexer = Indexer(corpusreader, tokenizer)
+    indexer = Indexer(tokenizer)
 
     # GET RESULTS
     t1 = time.time()
-    indexer.index()
+    indexer.index(corpusreader)
     t2 = time.time()
 
     print('seconds: ', t2 - t1)
