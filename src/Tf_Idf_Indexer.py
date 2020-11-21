@@ -68,17 +68,17 @@ class Tf_idf_Indexer(Indexer):
                     doc_scores[doc.docID] = doc.score * termScore
 
         bestDocs = heapq.nlargest(10, doc_scores.items(), key=lambda item: item[1])
-        return bestDocs
+        return [self.idMap[docid] for docid, score in bestDocs]
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-tokenizer", type=int, default=2, choices=[1, 2], help="tokenizer")
-    parser.add_argument("-f", type=str, default="../all_sources_metadata_2020-03-13.csv", help="text")
+    parser.add_argument("-c", type=str, default="../metadata_2020-03-27.csv", help="Corpus file")
     args = parser.parse_args()
 
-    corpusreader = CorpusReader(args.f)
+    corpusreader = CorpusReader(args.c)
     if args.tokenizer == 1:
         tokenizer = Tokenizer1()
     else:

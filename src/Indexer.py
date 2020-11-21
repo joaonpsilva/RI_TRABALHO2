@@ -18,24 +18,24 @@ class Indexer():
         self.idMap = {}
         self.invertedIndex = {}
         self.docID = 0
-        self.idMapFile = "../idMapFile.pickle"
-
-        with open(self.idMapFile, 'wb') as f:  # Init or clean file
-            pickle.dump({}, f)
 
     def hasEnoughMemory(self):
         return True
 
-    def idMapToDisk(self):
-        with open(self.idMapFile, 'rb') as f:
+    def idMapToDisk(self, idMapFile):
+        with open(idMapFile, 'rb') as f:
             content = pickle.load(f)
 
         content.update(self.idMap)
 
-        with open(self.idMapFile, 'wb') as f:
+        with open(idMapFile, 'wb') as f:
             pickle.dump(content, f)
 
         self.idMap = {}
+    
+    def loadIDMap(self, idMapFile):
+        with open(idMapFile, 'rb') as f:
+            self.idMap = pickle.load(f)
 
     def addTokensToIndex(self, tokens):
         for word in tokens:  # Iterate over token of documents
@@ -68,13 +68,6 @@ class Indexer():
 
                 self.docID += 1
 
-            count += self.docID  # Write id map tp disk
-            if count >= 10000:
-                self.idMapToDisk()
-                count = 0
-
-        self.idMapToDisk()  # id map not needed, free memory
-
     def write_to_file(self, file="../Index.txt"):
         print("Writing to {}".format(file))
         # Apagar o ficheiro caso ele exista
@@ -95,6 +88,13 @@ class Indexer():
 
         print("File {} created".format(file))
         f.close()
+        
+        #WRITE IDMAP
+        idMapFile = os.path.splitext(file)[0] + "_idMapFile.pickle"
+        print("Writing idMap to {}".format(idMapFile))
+        with open(idMapFile, 'wb') as f:  # Init or clean file
+            pickle.dump({}, f)
+        self.idMapToDisk(idMapFile)
 
     def read_file(self, file="../Index.txt"):
         print("Reading {}".format(file))
@@ -122,6 +122,11 @@ class Indexer():
 
         f.close()
         print("Index created from file {}".format(file))
+
+        #LOAD IDMAP
+        idMapFile = os.path.splitext(file)[0] + "_idMapFile.pickle"
+        print("Reading idMap from {}".format(idMapFile))
+        self.loadIDMap(idMapFile)
     
     def buildPostingList(self, line):
             return [Posting(int(values.split(":")[0]), float(values.split(":")[1])) for values in line[1:]]
@@ -132,10 +137,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-tokenizer", type=int, choices=[1, 2], required=True, help="tokenizer")
-    parser.add_argument("-f", type=str, default="../all_sources_metadata_2020-03-13.csv", help="text")
+    parser.add_argument("-c", type=str, default="../metadata_2020-03-27.csv", help="Corpus file")
     args = parser.parse_args()
 
-    corpusreader = CorpusReader(args.f)
+    corpusreader = CorpusReader(args.c)
     if args.tokenizer == 1:
         tokenizer = Tokenizer1()
     else:
