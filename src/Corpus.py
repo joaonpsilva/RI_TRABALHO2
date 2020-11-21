@@ -13,7 +13,7 @@ class CorpusReader():
         except StopIteration:
             return None
 
-        chunk = chunk.dropna(subset=['abstract'])   #drop empty abstract
-        chunk = chunk[['doi', 'title', 'abstract']] #keep only these fields
+        chunk = chunk.dropna(subset=['abstract', 'title'])   #drop empty abstract
+        chunk = chunk[['cord_uid', 'title', 'abstract']] #keep only these fields
 
         return chunk.values
