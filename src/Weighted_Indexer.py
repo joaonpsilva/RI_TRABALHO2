@@ -53,8 +53,8 @@ if (args.query):
         number = entrie.get('number')
         query = entrie.find('query').text
 
-        print(indexer.score(query))
-        break
+        print(number, ' - ', query)
+        print(indexer.score(query, 10))
 
 #SAVE INDEX
 if (args.out != None):
