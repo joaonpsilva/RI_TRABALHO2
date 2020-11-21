@@ -55,7 +55,7 @@ if (args.query):
 
         print(indexer.score(query))
         break
-    
+
 #SAVE INDEX
 if (args.out != None):
     indexer.write_to_file(args.out)

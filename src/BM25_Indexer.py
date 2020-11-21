@@ -47,7 +47,7 @@ class BM25_Indexer(Indexer):
                 self.invertedIndex[token][1].append(posting)
                 self.invertedIndex[token][0] += 1    
 
-    def score(self, query):
+    def score(self, query, ndocs=None):
         queryTokens = self.tokenizer.process(query)
         
         doc_scores = {}
@@ -67,7 +67,10 @@ class BM25_Indexer(Indexer):
                 else:
                     doc_scores[doc.docID] = score
 
-        bestDocs = heapq.nlargest(10, doc_scores.items(), key=lambda item: item[1])
+        if ndocs == None:
+            bestDocs = sorted(doc_scores.items(), key=lambda item: item[1], reverse=True)
+        else:
+            bestDocs = heapq.nlargest(ndocs, doc_scores.items(), key=lambda item: item[1])
 
         return [self.idMap[docid] for docid, score in bestDocs]
     
