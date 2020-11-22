@@ -30,6 +30,7 @@ class BM25_Indexer(Indexer):
     def index(self, corpusreader):
         super().index(corpusreader)
         self.build_idf()
+        self.avdl /= self.docID
 
     def addTokensToIndex(self, tokens):
         tokens = collections.Counter(tokens).most_common() #[(token, occur)]
@@ -77,7 +78,8 @@ class BM25_Indexer(Indexer):
     def read_file(self, file="../Index.txt"):
         self.docLength={}
         super().read_file(file)
-        self.avdl = sum(self.docLength.values())
+        self.docID = len(self.docLength)
+        self.avdl = sum(self.docLength.values())/self.docID
 
     def buildPostingList(self, line):
         postingList = []
