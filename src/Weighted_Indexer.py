@@ -8,7 +8,7 @@ parser.add_argument("-c", type=str, default="../metadata_2020-03-27.csv", help="
 parser.add_argument("-l", type=str, help="Load Inverted Index")
 parser.add_argument("-i", type=str, choices=['bm25', 'tfidf'], required=True, help="Indexer")
 parser.add_argument("-out", type=str, help="Output file to save Inverted Index")
-parser.add_argument("-relevant", type=str, default="../queries.relevance.txt",
+parser.add_argument("-relevant", type=str, default="../queries.relevance.filtered.txt",
                     help="file with the relevant query result")
 parser.add_argument("--query", action="store_true", help="Process Queries")
 args = parser.parse_args()
@@ -140,9 +140,9 @@ def calculateMean(valores):
             "ndcg": ndcg, "latecy": medianLatency}
 
 
-def writeToCsv(valores10, valores20, valores50):
+def writeToCsv(valores10, valores20, valores50, indexername):
     import csv
-    with open('results.csv', mode='w') as file:
+    with open('../results/results' + indexername + '.csv', mode='w') as file:
         writer = csv.writer(file)
         writer.writerow(
             ["Query", "", "Precision", "", "", "Recall", "", "", "F-Measure", "", "", "Average Precision", "", "",
@@ -209,15 +209,18 @@ if args.query:
             number = entrie.get('number')
             query = entrie.find('query').text
 
-            print(number, ' - ', query)
-
             start_time = time.time()
             retrieved_docs = indexer.score(query, size)
-            print(indexer.score(query, size))
+            stop_time = time.time()
+
+            if size == 50:
+                print(number, ' - ', query)
+                print(retrieved_docs)
+                print("\n")
 
             valores[number] = {}  # inicializar o dicionario nested
 
-            valores[number]["latecy"] = (time.time() - start_time)
+            valores[number]["latecy"] = (stop_time - start_time)
             precision = valores[number]["precision"] = calculatePrecision(retrieved_docs, relevant_docs[number])
             recall = valores[number]["recall"] = calculateRecall(retrieved_docs, relevant_docs[number])
             valores[number]["f-measure"] = calculateF_Measure(precision, recall)
@@ -253,7 +256,7 @@ if args.query:
         print("Query size: {}".format(size))
         print(t)
 
-    writeToCsv(valores10, valores20, valores50)
+    writeToCsv(valores10, valores20, valores50, args.i)
 
 # SAVE INDEX
 if args.out is not None:
