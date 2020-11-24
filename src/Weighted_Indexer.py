@@ -43,7 +43,7 @@ def calculateRecall(retrieved_docs, relevantList):
 
 
 def calculateF_Measure(precision, recall):
-    if precision+recall == 0:   # Crash prevention
+    if precision + recall == 0:  # Crash prevention
         return 0.0
     return (2 * precision * recall) / (precision + recall)
 
@@ -108,24 +108,36 @@ def calculateMean(valores):
     avgPrecision = 0
     latecy = 0
     ndcg = 0
+    latencyList = []
     size = len(valores.keys())
     for key in valores.keys():
         precision += valores[key]["precision"]
         recall += valores[key]["recall"]
         f_measure += valores[key]["f-measure"]
         avgPrecision += valores[key]["average Precision"]
-        latecy += valores[key]["latecy"]
         ndcg += valores[key]["ndcg"]
+        latecy += valores[key]["latecy"]
+        latencyList.append(valores[key]["latecy"])
 
     precision /= size
     recall /= size
     f_measure /= size
     avgPrecision /= size
-    latecy /= size
     ndcg /= size
+    latecy /= size
+
+    # Median Latency
+    latencyList = sorted(latencyList)
+    lstLen = len(latencyList)
+    index = (lstLen - 1) // 2
+
+    if lstLen % 2:
+        medianLatency = latencyList[index]
+    else:
+        medianLatency = (latencyList[index] + latencyList[index + 1]) / 2.0
 
     return {"precision": precision, "recall": recall, "f-measure": f_measure, "average Precision": avgPrecision,
-            "ndcg": ndcg, "latecy": latecy}
+            "ndcg": ndcg, "latecy": medianLatency}
 
 
 def writeToCsv(valores10, valores20, valores50):
@@ -142,7 +154,8 @@ def writeToCsv(valores10, valores20, valores50):
             writer.writerow([key, valores10[key]["precision"], valores20[key]["precision"], valores50[key]["precision"],
                              valores10[key]["recall"], valores20[key]["recall"], valores50[key]["recall"],
                              valores10[key]["f-measure"], valores20[key]["f-measure"], valores50[key]["f-measure"],
-                             valores10[key]["average Precision"], valores20[key]["average Precision"], valores50[key]["average Precision"],
+                             valores10[key]["average Precision"], valores20[key]["average Precision"],
+                             valores50[key]["average Precision"],
                              valores10[key]["ndcg"], valores20[key]["ndcg"], valores50[key]["ndcg"],
                              valores10[key]["latecy"], valores20[key]["latecy"], valores50[key]["latecy"], ])
 
