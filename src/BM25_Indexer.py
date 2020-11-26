@@ -19,28 +19,42 @@ class BM25_Indexer(Indexer):
         super().__init__(tokenizer)
         self.k1 = k1
         self.b = b
-        self.docLength = {}
         self.avdl = 0
 
     def build_idf(self):
         for term, valList in self.invertedIndex.items():
             valList[0] = log10(self.docID/valList[0])
 
+    def calcAvdl(self, corpusreader):
+        count=0
+        while True:
+            data = corpusreader.getNextChunk()
+            if data is None:
+                break
+
+            for document in data:  # Iterate over Chunk of documents
+                doi, title, abstract = document[0], document[1], document[2]
+                tokens = self.tokenizer.process(title, abstract)
+                self.avdl += len(tokens)
+                count+=1
+
+        self.avdl /= count
 
     def index(self, corpusreader):
+        self.calcAvdl(corpusreader)
         super().index(corpusreader)
         self.build_idf()
-        self.avdl /= self.docID
 
     def addTokensToIndex(self, tokens):
         tokens = collections.Counter(tokens).most_common() #[(token, occur)]
         dl = sum([tf for term, tf in tokens])
-        self.docLength[self.docID] = dl
-        self.avdl += dl
+
 
         for token, tf in tokens:
             
-            posting = Posting(self.docID, tf )
+            score = ((self.k1 + 1) * tf) / (self.k1 * ((1-self.b) + self.b*(dl / self.avdl)) + tf)
+
+            posting = Posting(self.docID, score)
 
             if token not in self.invertedIndex:
                 self.invertedIndex[token] = [1, [posting]]
@@ -60,8 +74,7 @@ class BM25_Indexer(Indexer):
             idf = self.invertedIndex[term][0]
             for doc in self.invertedIndex[term][1]:
 
-                score = idf * (((self.k1 + 1) * doc.score) / 
-                    (self.k1 * ((1-self.b) + self.b*(self.docLength[doc.docID] / self.avdl)) + doc.score))
+                score = idf * doc.score 
 
                 if doc.docID in doc_scores:
                     doc_scores[doc.docID] += score
@@ -74,28 +87,7 @@ class BM25_Indexer(Indexer):
             bestDocs = heapq.nlargest(ndocs, doc_scores.items(), key=lambda item: item[1])
 
         return [self.idMap[docid] for docid, score in bestDocs]
-    
-    def read_file(self, file="../Index.txt"):
-        self.docLength={}
-        super().read_file(file)
-        self.docID = len(self.docLength)
-        self.avdl = sum(self.docLength.values())/self.docID
-
-    def buildPostingList(self, line):
-        postingList = []
-        for values in line[1:]:
-            docid = int(values.split(":")[0])
-            tf = int(values.split(":")[1])
-            postingList.append(Posting(docid, tf))
-
-            if docid in self.docLength:
-                self.docLength[docid] += tf
-            else:
-                self.docLength[docid] = tf
         
-        return postingList
-        
-
 
 if __name__ == "__main__":
 

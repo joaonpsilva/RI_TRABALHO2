@@ -116,7 +116,7 @@ class Indexer():
             term = line[0].split(":")[0]
             idf = float(line[0].split(":")[1])
             
-            postingList = self.buildPostingList(line)
+            postingList = [Posting(int(values.split(":")[0]), float(values.split(":")[1])) for values in line[1:]]
 
             self.invertedIndex[term] = [idf, postingList]
 
@@ -128,8 +128,6 @@ class Indexer():
         print("Reading idMap from {}".format(idMapFile))
         self.loadIDMap(idMapFile)
     
-    def buildPostingList(self, line):
-            return [Posting(int(values.split(":")[0]), float(values.split(":")[1])) for values in line[1:]]
 
 
 
