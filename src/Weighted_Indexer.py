@@ -201,10 +201,10 @@ if args.query:
 
     root = ET.parse('../queries.txt.xml').getroot()
 
-    valores = {}  # dicionario de dicionario com formato {numero_da_query : {precision: valor , recall:valor , ...}
     relevant_docs = getRelevantDocs()  # dicionario com formato {numero_da_query : [lista de docs relevantes]}
 
     for size in [10, 20, 50]:
+        valores={}                       # dicionario de dicionario com formato {numero_da_query : {precision: valor , recall:valor , ...}
         for entrie in root.findall('topic'):
             number = entrie.get('number')
             query = entrie.find('query').text
@@ -217,7 +217,6 @@ if args.query:
                 print(number, ' - ', query)
                 print(retrieved_docs)
                 print("\n")
-
             valores[number] = {}  # inicializar o dicionario nested
 
             valores[number]["latecy"] = (stop_time - start_time)
