@@ -30,10 +30,12 @@ time:
 
 TFI-IDF:
  - Indexing Time:  13.400408744812012
- - Loading from file Time:  4.624469757080078
+ - Loading from file Time:  4.960155725479126
 
 BM25:
  - Indexing Time:  12.474901914596558
- - Loading from file Time:  4.624469757080078
+ - Loading from file Time:  4.591497898101807
+
+Overall, the average results for the bm25 ranking function were better than the ones present in tf-idf.
 
 
